@@ -1,0 +1,22 @@
+name: Web2ServerBridge
+version: '1.0.0'
+main: top.nekolove.web2serverbridge.Web2ServerBridgePlugin
+api-version: '1.21'
+author: ahhhub
+description: |-
+  Exposes live server status and chat as JSON over HTTP, and lets your website talk in game as a player.
+  网页与游戏互通桥接：对外提供服务器实况 JSON 与聊天消息，支持网页以玩家身份发言
+website: https://github.com/ahhhub/Web2ServerBridge
+load: POSTWORLD
+
+commands:
+  web2serverbridge:
+    description: Manage the Web2ServerBridge plugin / Web2ServerBridge 管理命令
+    usage: /web2serverbridge <status|config|token|push|reload>
+    aliases: [w2sb, bridge]
+    permission: web2serverbridge.admin
+
+permissions:
+  web2serverbridge.admin:
+    description: Allows managing Web2ServerBridge / 允许管理 Web2ServerBridge
+    default: op

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Web2ServerBridge — expose live Minecraft server status and chat over HTTP,
+  and let a website talk in game as a player.
+
+  Build notes (see README "Building"):
+    * Target platform: Paper / Purpur 1.21+ (compiled against paper-api 26.2.build.119-stable).
+    * paper-api 26.2 is compiled to class file version 69 (Java 25), so the build
+      itself must run on JDK 25. <release>21</release> makes javac emit Java 21
+      bytecode, which is what the server runs.
+    * Every dependency is <scope>provided</scope>: nothing is bundled into the
+      plugin jar, because the server already ships all of them at runtime.
+    * No third-party runtime dependency is used (JSON / YAML handling is built in).
+
+  Build:
+    set JAVA_HOME=<path to a JDK 25>
+    mvn -B clean package           # produces target/Web2ServerBridge-1.0.0.jar
+    mvn -o -B clean package        # same, fully offline (after one online build)
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>top.nekolove</groupId>
+  <artifactId>web2serverbridge</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <name>Web2ServerBridge</name>
+  <description>Minecraft server plugin that exposes live status and chat as JSON over HTTP and lets a website speak in game as a player</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- Output bytecode target: Java 21 (matches the server runtime). -->
+    <maven.compiler.release>21</maven.compiler.release>
+
+    <paper.version>26.2.build.119-stable</paper.version>
+    <adventure.version>5.2.0</adventure.version>
+    <examination.version>1.3.0</examination.version>
+    <bungeecord.chat.version>1.21-R0.2-deprecated+build.21</bungeecord.chat.version>
+    <annotations.version>26.1.0</annotations.version>
+  </properties>
+
+  <repositories>
+    <!-- paper-api (and the Adventure / BungeeCord chat artifacts it re-exports). -->
+    <repository>
+      <id>papermc</id>
+      <url>https://repo.papermc.io/repository/maven-public/</url>
+    </repository>
+    <!-- Everything else (annotations, examination-api, ...). -->
+    <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <!-- Paper / Bukkit API (provided by the server at runtime) -->
+    <dependency>
+      <groupId>io.papermc.paper</groupId>
+      <artifactId>paper-api</artifactId>
+      <version>${paper.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Adventure text components (bundled with the server, 5.2.0) -->
+    <dependency>
+      <groupId>net.kyori</groupId>
+      <artifactId>adventure-api</artifactId>
+      <version>${adventure.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.kyori</groupId>
+      <artifactId>adventure-text-serializer-plain</artifactId>
+      <version>${adventure.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.kyori</groupId>
+      <artifactId>adventure-text-serializer-legacy</artifactId>
+      <version>${adventure.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.kyori</groupId>
+      <artifactId>adventure-key</artifactId>
+      <version>${adventure.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Referenced by the Adventure API surface (Examinable), bundled with the server. -->
+    <dependency>
+      <groupId>net.kyori</groupId>
+      <artifactId>examination-api</artifactId>
+      <version>${examination.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Legacy (BungeeCord) chat components, still referenced by Paper API signatures. -->
+    <dependency>
+      <groupId>net.md-5</groupId>
+      <artifactId>bungeecord-chat</artifactId>
+      <version>${bungeecord.chat.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- Annotations (@NotNull / @Nullable), needed for command completion signatures. -->
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+      <version>${annotations.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>Web2ServerBridge-${project.version}</finalName>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+            <arg>-Xlint:-options</arg>
+            <arg>-Xlint:-deprecation</arg>
+            <arg>-Xlint:-unchecked</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.1</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Implementation-Title>Web2ServerBridge</Implementation-Title>
+              <Implementation-Version>${project.version}</Implementation-Version>
+              <Built-With-JDK>25 (target release 21)</Built-With-JDK>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>

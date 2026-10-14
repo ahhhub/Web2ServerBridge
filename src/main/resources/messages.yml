@@ -1,0 +1,149 @@
+# ============================================================
+#  Web2ServerBridge 文本配置
+#
+#  插件所有「外显字符串」都在本文件中，代码里不再硬编码任何提示文本。
+#  （HTTP 响应里的 ok / error 等机器可读状态码不在此列，那些是协议的一部分。）
+#
+#  占位符：{name} {player} {current} {max} {count} {command} {version} {url} {error} {status} {id}
+#  颜色代码：&a &b &c ... （游戏内消息支持），HTTP 文本会原样输出给前端
+#
+#  修改后执行 /web2serverbridge reload 生效。
+# ============================================================
+
+# ---------------- 插件启动 / 停用日志 ----------------
+lifecycle:
+  enabled: "Web2ServerBridge 已启用 | 模式={mode} | HTTP={http} | 主动上报={outbound}"
+  disabled: "Web2ServerBridge 已停用"
+  http-disabled: "http.enabled=false，跳过内置 HTTP 服务（将仅使用主动上报）"
+  http-listening: "HTTP 服务已启动: {url}"
+  http-start-failed: |-
+    HTTP 服务启动失败（端口 {port}）：{error}
+    若这是面板服/容器环境，可忽略本警告——只要 outbound.mode=push/both，
+    插件会主动上报后端，无需任何入站端口。
+  outbound-disabled: "主动上报未启用（mode={mode}，url={url}）"
+  outbound-enabled: "主动上报已启用 -> {url}（每 {seconds} 秒一次）"
+  outbound-report-failed: "上报后端失败（第 {count} 次）: {error}"
+  outbound-unauthorized: "后端拒绝令牌（HTTP {status}），请检查 outbound.token / http.token"
+  outbound-http-error: "后端返回 HTTP {status}: {body}"
+  outbound-response-parse-failed: "解析后端响应失败: {error}"
+  outbound-broadcast-failed: "广播网页消息失败（id={id}）: {error}"
+  outbound-ack-failed: "发送 ack 失败（消息不重复但后端会重发）: {error}"
+  outbound-exception: "上报异常: {error}"
+  status-collect-failed: "状态采集失败: {error}"
+  # 文本层自身的加载日志
+  messages-loaded: "messages.yml 已加载，共 {count} 条文本"
+  messages-load-failed: "messages.yml 加载失败，将使用内置兜底文本: {error}"
+  papi-detected: "已检测到 PlaceholderAPI，messages.yml 中的 %占位符% 将被解析"
+  # 内置 HTTP 服务的兜底异常日志（请求线程内未预期异常）
+  http-handler-error: "HTTP 处理异常: {error}"
+  config-reloaded: "配置已重载"
+  config-reloaded-http-changed: "HTTP 监听参数已变更（{old} -> {new}），已按新配置重启服务"
+  token-placeholder-warning: |-
+    http.token 仍是默认占位值！接口处于不安全状态。
+    请执行 /web2serverbridge token 生成随机令牌，并同步到后端配置。
+  web-broadcast-failed: "广播网页消息失败: {error}"
+
+# ---------------- 控制台 / 游戏内播报 ----------------
+game:
+  # 网页消息在游戏内的格式：{player} {text}
+  web-message-format: "&b[网页] &f{player}&7: &f{text}"
+  # 插件自身日志里记录网页消息的格式
+  web-message-log: "[网页消息] {player}: {text}"
+  # 原版未提供加入/离开/死亡播报文本时的兜底（进入消息流，网页端可见）
+  player-joined: "{player} 加入了游戏"
+  player-left: "{player} 离开了游戏"
+  player-died: "{player} 死亡了"
+
+# ---------------- 控制台采集 ----------------
+console:
+  # 后台执行命令时记入消息流的格式：{command}
+  command-log: "[控制台命令] /{command}"
+  # 控制台发送者（插件向控制台输出的消息）前缀，留空表示不加前缀
+  sender-prefix: ""
+
+# ---------------- 命令反馈 ----------------
+command:
+  help-header: "&bWeb2ServerBridge 命令："
+  help-status: "&7/{command} status &f- 查看运行状态"
+  help-config: "&7/{command} config &f- 查看关键配置"
+  help-token: "&7/{command} token  &f- 生成新的共享令牌"
+  help-push: "&7/{command} push   &f- 立即上报一次（测试后端连通）"
+  help-reload: "&7/{command} reload &f- 热重载配置"
+  unknown-subcommand: "&c未知子命令：&f{sub}"
+
+  status-header: "&b═══ Web2ServerBridge 状态 ═══"
+  status-mode: "&7运行模式：&f{mode} &7| 运行时长：&f{uptime}s"
+  status-http-running: "&7内置 HTTP：&a运行中 &7(端口 {port}，前缀 {prefix})"
+  status-http-failed: "&7内置 HTTP：&c启动失败 &7({error})"
+  status-http-off: "&7内置 HTTP：&e已关闭"
+  status-outbound-on: "&7主动上报：&a开启 &7-> &f{url} &7(间隔 {seconds}s，待确认 {pending})"
+  status-outbound-off: "&7主动上报：&e关闭"
+  status-outbound-error: "&7最近错误：&c{error}"
+  status-players: "&7在线人数：&f{current}&7/&f{max} &7| TPS：&f{tps} &7| MSPT：&f{mspt}ms &7| 时延：&f{latency}&7({source})"
+  status-world: "&7世界：&f{world} &7| 游戏模式：&f{gamemode} &7| 游戏刻：&f{tick} &7| 时间：&f{time} &7| 天气：&f{weather}"
+  status-latency-unknown: "未知"
+  status-not-ready: "&e状态尚未就绪，请稍候重试"
+  status-messages: "&7消息环：&f{size}&7/&f{capacity} &7| 当前序号：&f{seq} &7| 时延样本：&f{samples}"
+  status-token-set: "&a已设置"
+  status-token-missing: "&c未设置（危险，请执行 /{command} token）"
+
+  config-header: "&b═══ 关键配置 ═══"
+  config-line: "&7{key}：&f{value}"
+
+  # 一行式状态摘要（statusLine()，供命令/调试输出；纯文本，不带颜色代码）
+  status-line: "在线 {online}/{max} | TPS {tps} | HTTP {http} | 主动上报 {outbound} | 消息 {count} 条"
+  status-line-http-on: "运行中({port})"
+  status-line-http-failed: "启动失败"
+  status-line-http-off: "关闭"
+  status-line-on: "开启"
+  status-line-off: "关闭"
+
+  token-header: "&a已生成新令牌并写入 config.yml："
+  token-value: "&f{token}"
+  token-hint: "&e请把该令牌同步到后端配置，否则接口将 401。"
+
+  push-ok: "&a上报成功：本批消息 {messages} 条，投递 {delivered} 条"
+  push-failed: "&c上报失败：&f{error}"
+  push-hint: "&7提示：面板服请确认 outbound.url 指向后端、令牌一致、后端可被外网访问。"
+  push-not-configured: "&c未配置 outbound.url，无法主动上报"
+  outbound-not-configured: "outbound_not_configured"
+
+# ---------------- HTTP 接口文本（前端会直接展示 message 字段） ----------------
+http:
+  unauthorized: "令牌无效或缺失"
+  rate-limited: "请求过于频繁，请稍后再试"
+  not-found: "未知接口: {path}"
+  method-not-allowed: "请求方法不被支持"
+  bad-request: "请求参数有误"
+  payload-too-large: "请求体超过上限 {max} 字节"
+  internal-error: "服务器内部错误"
+  json-parse-failed: "JSON 解析失败: {error}"
+  not-ready: "服务尚未就绪，请稍后再试"
+
+  send-missing-username: "缺少 username"
+  send-username-too-long: "玩家名过长"
+  send-empty-text: "消息内容不能为空"
+  send-invalid-text: "消息内容无效"
+  send-blocked: "消息包含被屏蔽的内容"
+  send-rate-limited: "发送过于频繁，请稍后再试"
+  send-not-online: "该玩家当前不在线，无法发言"
+
+  report-missing-fields: "缺少 username 或 pingMs"
+  report-not-ready: "时延采集未就绪"
+
+# ---------------- 状态快照字段（可选本地化） ----------------
+status-fields:
+  # 服务器在线情况（前端实况面板顶部的状态灯）
+  server-online: "在线"
+  server-offline: "离线"
+  server-unknown: "未知"
+  time-sunrise: "日出"
+  time-morning: "上午"
+  time-noon: "正午"
+  time-afternoon: "下午"
+  time-sunset: "日落"
+  time-night: "夜晚"
+  time-midnight: "深夜"
+  weather-clear: "晴朗"
+  weather-rain: "下雨"
+  weather-thunder: "雷暴"

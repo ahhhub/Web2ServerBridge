@@ -1,0 +1,30 @@
+# 构建产物
+target/
+*.jar
+!/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 运行期生成
+run/
+logs/
+*.log
+
+# 本地环境（令牌等敏感信息绝不入库）
+local.env
+local.json
+*.local.yml
+messages.local.yml

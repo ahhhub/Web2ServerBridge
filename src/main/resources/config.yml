@@ -1,0 +1,107 @@
+# ============================================================
+#  Web2ServerBridge 配置文件
+#  修改后执行 /web2serverbridge reload 即可热重载（端口变更需重启）
+# ============================================================
+
+# ---------------- HTTP 对外服务 ----------------
+http:
+  # 是否启用内置 HTTP 服务
+  enabled: true
+  # 监听地址：对外提供给后端反代/直连时用 0.0.0.0；仅本机调试可用 127.0.0.1
+  host: 0.0.0.0
+  # 监听端口（默认 28069，与后端约定一致）
+  port: 28069
+  # 接口前缀
+  path-prefix: "/api"
+  # 共享令牌：后端请求时必须携带（Authorization: Bearer <token>）
+  # 生产环境请改成 32 位以上随机串，并同步到后端配置
+  token: "CHANGE_ME_PLEASE_SET_A_RANDOM_TOKEN"
+  # 单个请求体上限（字节）
+  max-body-bytes: 16384
+  # CORS 允许来源：后端同源代理时留 "*" 即可；若前端直连请收紧为具体域名
+  cors-allow-origin: "*"
+  # 请求处理线程数
+  threads: 4
+
+# ---------------- 主动上报（面板服推荐） ----------------
+# 很多面板服（MCSManager / Pterodactyl / 宝塔等）只映射游戏端口，
+# 插件监听的 28069 外部连不进来。开启 outbound 后插件会主动把状态
+# POST 给后端，并顺带回取"网页发给游戏"的消息，完全不需要入站端口。
+outbound:
+  # both = 既监听端口也主动上报（推荐，后端两种都能用）
+  # push = 只主动上报（面板服/NAT）
+  # pull = 只监听端口（独立公网 IP 服）
+  mode: both
+  # 后端接收地址（插件 -> 后端）。留空表示不启用主动上报。
+  # 示例：https://example.com/api/bridge/report
+  url: ""
+  # 确认地址，留空则自动把 url 末尾的 /report 换成 /ack
+  ack-url: ""
+  # 留空则回退使用 http.token
+  token: ""
+  # 上报间隔（秒，最小 1）
+  interval-seconds: 1
+  connect-timeout-ms: 3000
+  read-timeout-ms: 5000
+  # 待后端确认的消息上限，超出丢弃最旧（防止后端长时间不可用导致内存增长）
+  queue-max: 500
+  # 插件启用时是否立即开始上报
+  enabled-on-start: true
+
+# ---------------- 消息采集 ----------------
+messages:
+  # 内存消息环容量（对外最多返回这么多条）
+  buffer-size: 200
+  # 是否采集控制台输出
+  include-console: true
+  # 采集哪些控制台级别
+  #   INFO  = 普通信息（玩家聊天/加入离开等，游戏内也看得到）——默认只采这个
+  #   ERROR = 控制台报错，属于控制台专有输出，游戏内玩家看不到，默认不采
+  #   WARN  = 无论怎么配都不会采集（需求明确排除）
+  console-levels:
+    - INFO
+  # 面板服/容器里 System.out 常带 ANSI 颜色转义码，是否清洗（建议 true）
+  strip-ansi: true
+  # 是否把玩家加入/离开/死亡等记入消息流（这些游戏内玩家能看到，建议 true）
+  include-system: true
+  # 是否把"后台执行的命令"同步到网页（默认 false）
+  # 后台命令是控制台专有输出，游戏内玩家看不到；同步过去会造成
+  # "网页看得到、游戏内看不到"的信息不对称，需要审计时再打开。
+  include-console-commands: false
+  # 网页消息在游戏内的前缀
+  web-prefix: "[网页] "
+  # 单条消息最大字符数
+  max-length: 256
+  # 简单敏感词（命中则拒绝发送，留空表示不过滤）
+  block-words: []
+  # 网页发言是否要求该玩家当前在线（false 表示已注册玩家未上线也能发言）
+  require-online: false
+
+# ---------------- 状态采集 ----------------
+status:
+  # 状态快照刷新间隔（秒）
+  refresh-seconds: 2
+  # 时延采集
+  latency:
+    # auto  = 有客户端上报用客户端样本，否则按 tick 估算
+    # client = 只用客户端上报（无样本时 latencyMs = -1）
+    # tick  = 只用服务端 tick 估算
+    mode: auto
+    # 客户端上报样本超过该秒数视为过期
+    client-stale-seconds: 30
+
+# ---------------- 安全 ----------------
+security:
+  rate-limit:
+    # 单 IP 每分钟最大请求数
+    max-per-minute: 60
+    # 单 IP 每分钟最大发消息数
+    send-per-minute: 10
+  # 是否把每次 HTTP 请求写入日志（调试图省事可开）
+  log-requests: false
+
+# ---------------- 其它 ----------------
+# 服务器显示名（对外 JSON 的 server.name）
+server-name: "Minecraft Server"
+# 是否把 MOTD 中的颜色代码转换为 & 形式文本（前端自行渲染）
+motd-keep-color-codes: true

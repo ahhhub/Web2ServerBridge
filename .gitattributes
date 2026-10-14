@@ -1,0 +1,22 @@
+# 统一换行：仓库内一律 LF，避免 Windows 检出的 CRLF 弄坏脚本与差异比较
+* text=auto eol=lf
+
+# 二进制文件不做换行转换
+*.jar binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.gif binary
+*.ico binary
+
+# 明确文本类型
+*.java text
+*.yml text
+*.yaml text
+*.md text
+*.xml text
+*.json text
+*.sh text eol=lf
+
+# GitHub 语言统计：把 Markdown 之外的资源排除在语言统计外
+docs/** linguist-documentation
