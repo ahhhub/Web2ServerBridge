@@ -1,5 +1,5 @@
 name: Web2ServerBridge
-version: '1.0.0'
+version: '1.1.0'
 main: top.nekolove.web2serverbridge.Web2ServerBridgePlugin
 api-version: '1.21'
 author: ahhhub

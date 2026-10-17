@@ -54,3 +54,8 @@ First public release.
   is a single small file and works fully offline (`mvn -o -B clean package`).
 
 [1.0.0]: https://github.com/ahhhub/Web2ServerBridge/releases/tag/v1.0.0
+
+## 1.1.0
+
+- Package namespace republished under 	op.nekolove.
+- Version aligned with the website plugin download center.
